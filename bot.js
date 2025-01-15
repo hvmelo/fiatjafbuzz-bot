@@ -5,6 +5,8 @@ import { useWebSocketImplementation } from "nostr-tools/relay";
 import { WebSocket } from "ws";
 import dotenv from "dotenv";
 import * as nip19 from "nostr-tools/nip19";
+import http from "http";
+const PORT = process.env.PORT || 8080;
 
 dotenv.config();
 
@@ -74,3 +76,13 @@ schedule.scheduleJob(rule, () => {
     lastPostDate = today;
   }
 });
+
+// Create a simple HTTP server
+http
+  .createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("Bot is running!\n");
+  })
+  .listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
