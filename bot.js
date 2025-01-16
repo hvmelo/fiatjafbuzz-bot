@@ -92,22 +92,26 @@ if (lastPostEnv) {
   lastPostDate = new Date(lastPostEnv);
   console.log(`Using LAST_POST date: ${lastPostDate}`);
 } else {
-  console.log("LAST_POST not set, using current date as initial post date");
+  console.log("LAST_POST not set");
 }
 
 const isWeekend = (date) => {
   return date.getDay() === 0 || date.getDay() === 6;
 };
 
+const postAtStartUp = process.env.POST_AT_START_UP === "true";
+
 // Post the first message immediately, only if LAST_POST is not set
-if (!lastPostEnv) {
+if (!lastPostEnv && postAtStartUp) {
   const today = new Date();
   postMessage(isWeekend(today) ? "gfy fiatjaf" : "GM fiatjaf");
   lastPostDate = today;
 }
 
+const dayHourToCheckPost = process.env.DAY_HOUR_TO_CHECK_POST || 12;
+
 const rule = new schedule.RecurrenceRule();
-rule.hour = 16;
+rule.hour = dayHourToCheckPost;
 rule.minute = 0;
 
 // Post the message every minute, if 2 days have passed since the last post
