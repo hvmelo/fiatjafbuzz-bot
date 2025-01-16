@@ -7,6 +7,7 @@ import { WebSocket } from "ws";
 import dotenv from "dotenv";
 import * as nip19 from "nostr-tools/nip19";
 import http from "http";
+import { exec } from "child_process";
 const PORT = process.env.PORT || 8080;
 
 dotenv.config();
@@ -109,6 +110,7 @@ schedule.scheduleJob(rule, () => {
 });
 
 if (kDebug) {
+  console.log("Debug mode is enabled");
   // Schedule a task to execute every 30 seconds, for debugging purposes
   const thirtySecondRule = new schedule.RecurrenceRule();
   thirtySecondRule.second = new schedule.Range(0, 59, 30);
@@ -133,6 +135,53 @@ function formatUptime(startTime) {
 
   return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
+
+async function testRelayConnectivityAndDNS(relays) {
+  relays.forEach((relay) => {
+    // Extract the hostname from the relay URL
+    const hostname = relay.replace(/^wss?:\/\//, "").split("/")[0];
+
+    // Test DNS resolution with nslookup
+    exec(`nslookup ${hostname}`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`nslookup error for ${hostname}:`, error);
+        return;
+      }
+      console.log(`nslookup output for ${hostname}:`, stdout);
+      if (stderr) {
+        console.error(`nslookup stderr for ${hostname}:`, stderr);
+      }
+    });
+
+    // Test connectivity with websocat
+    const websocatProcess = exec(
+      `websocat -v ${relay}`,
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`websocat error for ${relay}:`, error);
+          //return; // Don't return here
+        }
+        if (stdout) {
+          console.log(`websocat output for ${relay}:`, stdout);
+        }
+        if (stderr) {
+          console.error(`websocat stderr for ${relay}:`, stderr);
+        }
+      }
+    );
+
+    // Capture real-time output from websocat (optional)
+    websocatProcess.stdout.on("data", (data) => {
+      console.log(`websocat stdout: ${data}`);
+    });
+
+    websocatProcess.stderr.on("data", (data) => {
+      console.error(`websocat stderr: ${data}`);
+    });
+  });
+}
+
+await testRelayConnectivityAndDNS(relays);
 
 // Create a simple HTTP server
 http

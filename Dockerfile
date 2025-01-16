@@ -1,7 +1,14 @@
-FROM node:20-alpine
+FROM node:16-alpine
+
 WORKDIR /app
+
 COPY package*.json ./
+
 RUN npm install
+
+# Install websocat and bind-tools (for nslookup)
+RUN apk add --no-cache websocat bind-tools
+
 COPY . .
-EXPOSE 8080
+
 CMD ["node", "bot.js"]
