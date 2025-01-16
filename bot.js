@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 8080;
 
 dotenv.config();
 
+console.log("Starting Nostr bot...");
+
 // Use a third party implementation of WebSocket
 useWebSocketImplementation(WebSocket);
 
@@ -109,6 +111,8 @@ if (!lastPostEnv && postAtStartUp) {
 }
 
 const dayHourToCheckPost = process.env.DAY_HOUR_TO_CHECK_POST || 12;
+
+console.log(`Hour of the day to check posts: ${dayHourToCheckPost}`);
 
 const rule = new schedule.RecurrenceRule();
 rule.hour = dayHourToCheckPost;
