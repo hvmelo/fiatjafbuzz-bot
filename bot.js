@@ -86,29 +86,52 @@ const postMessage = async (message) => {
 // Schedule tasks
 let lastPostDate = null;
 
-const rule = new schedule.RecurrenceRule();
-rule.hour = 12;
-rule.minute = 0;
+// Check if LAST_POST environment variable is set
+const lastPostEnv = process.env.LAST_POST;
+if (lastPostEnv) {
+  lastPostDate = new Date(lastPostEnv);
+  console.log(`Using LAST_POST date: ${lastPostDate}`);
+} else {
+  console.log("LAST_POST not set, using current date as initial post date");
+}
 
 const isWeekend = (date) => {
   return date.getDay() === 0 || date.getDay() === 6;
 };
 
-// Post the first message immediately
-const today = new Date();
-postMessage(isWeekend(today) ? "gfy fiatjaf" : "GM fiatjaf");
-lastPostDate = today;
+// Post the first message immediately, only if LAST_POST is not set
+if (!lastPostEnv) {
+  const today = new Date();
+  postMessage(isWeekend(today) ? "gfy fiatjaf" : "GM fiatjaf");
+  lastPostDate = today;
+}
 
-// Post the message every 2 days from the last post
+const rule = new schedule.RecurrenceRule();
+rule.hour = 16;
+rule.minute = 0;
+
+// Post the message every minute, if 2 days have passed since the last post
 schedule.scheduleJob(rule, () => {
   const today = new Date();
-  if (today.getDate() - lastPostDate.getDate() >= 2) {
+  // Use lastPostDate if available, otherwise use current date
+  const referenceDate = lastPostDate || today;
+  // Calculate the difference in milliseconds between today and the reference date
+  const diffInMilliseconds = Math.abs(today - referenceDate);
+  // Convert 2 days to milliseconds
+  const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
+
+  console.log(
+    `Time passed since last post: ${formatTimePassed(diffInMilliseconds)}`
+  );
+  if (diffInMilliseconds >= twoDaysInMilliseconds) {
     postMessage(isWeekend(today) ? "gfy fiatjaf" : "GM fiatjaf");
     lastPostDate = today;
+    console.log(`New last post date: ${new Date().toString()}`);
   }
 });
 
 if (kDebug) {
+  console.log("Debug mode is enabled");
   // Schedule a task to execute every 30 seconds, for debugging purposes
   const thirtySecondRule = new schedule.RecurrenceRule();
   thirtySecondRule.second = new schedule.Range(0, 59, 30);
@@ -118,50 +141,41 @@ if (kDebug) {
   });
 }
 
-// Tempo de início do bot
-const startTime = new Date();
-
-// Função para formatar o tempo de execução
-function formatUptime(startTime) {
-  const now = new Date();
-  const diff = now - startTime;
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+// Function to format the execution time
+function formatTimePassed(timeInMilliseconds) {
+  const days = Math.floor(timeInMilliseconds / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (timeInMilliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+  const minutes = Math.floor(
+    (timeInMilliseconds % (1000 * 60 * 60)) / (1000 * 60)
+  );
+  const seconds = Math.floor((timeInMilliseconds % (1000 * 60)) / 1000);
 
   return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
+
+// Start time of the bot
+const startTime = new Date();
 
 // Create a simple HTTP server
 http
   .createServer((req, res) => {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.write("<h1>Bot is running!</h1>");
-
-    // Adicionar link para o npub do autor
     res.write(
       `<p>Author: <a href="https://primal.net/p/${authorNpub}" target="_blank">${authorNpub}</a></p>`
     );
-
-    // Adicionar link para o npub do bot
     res.write(
       `<p>Bot: <a href="https://primal.net/p/${publicKeyNpub}" target="_blank">${publicKeyNpub}</a></p>`
     );
-
-    // Adicionar tempo de execução
-    res.write(`<p>Uptime: ${formatUptime(startTime)}</p>`);
-
-    // Adicionar lista de relays
+    res.write(`<p>Uptime: ${formatTimePassed(new Date() - startTime)}</p>`);
     res.write("<h2>Relays:</h2>");
     res.write("<ul>");
     relays.forEach((relay) => {
       res.write(`<li>${relay}</li>`);
     });
     res.write("</ul>");
-
-    // Adicionar impressões
     res.write("<h2>Impressions:</h2>");
     res.write("<ul>");
     impressions.forEach((impression) => {
