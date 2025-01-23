@@ -26,8 +26,7 @@ primary_region = 'gru'
   AUTHOR_NPUB = 'npub1y3yqdp44vg62ys8anqnjpx6cfprl848ev4lsmx5h4mznyz3xft9sen050h'
   RELAYS = 'wss://relay.damus.io,wss://relay.snort.social,wss://nos.lol,wss://eden.nostr.land'
   DEBUG = 'false'
-  LAST_POST = 'January 16, 2025 16:00:00 GMT-03:00'
-  DAY_HOUR_TO_CHECK_POST = 17
+  LAST_POST = 'January 21, 2025 14:00:00 GMT-03:00'
   POST_AT_START_UP = 'false'
 
 

@@ -110,15 +110,10 @@ if (!lastPostEnv && postAtStartUp) {
   lastPostDate = today;
 }
 
-const dayHourToCheckPost = process.env.DAY_HOUR_TO_CHECK_POST || 12;
-
-console.log(`Hour of the day to check posts: ${dayHourToCheckPost}`);
-
 const rule = new schedule.RecurrenceRule();
-rule.hour = dayHourToCheckPost;
-rule.minute = 0;
+rule.minute = 0; // Check every hour
 
-// Post the message every minute, if 2 days have passed since the last post
+// Post the message if 2 days have passed since the last post
 schedule.scheduleJob(rule, () => {
   const today = new Date();
   // Use lastPostDate if available, otherwise use current date
